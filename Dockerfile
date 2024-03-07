@@ -2,29 +2,26 @@
 # run : docker run -p 8501:8501 -v ~/.kube:/root/.kube aks_manager
 # run 기본 참조 : docker run -p 8501:8501 aks_manager
 
-# Use an official Python runtime as a parent image
+# 기본 이미지 설정
 FROM python:3.8
 
-# Set the working directory in the container
+# 작업 디렉터리 설정
 WORKDIR /app
 
-
-# Copy the current directory contents into the container at /app
+# 현재 디렉터리의 내용을 컨테이너의 /app으로 복사
 COPY . /app
 
-# Install any needed packages specified in requirements.txt
+# requirements.txt에 명시된 필요한 패키지들을 설치
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install kubectl
-RUN apt-get update && \
-    apt-get install -y gnupg2 && \
-    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
-    echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list && \
-    apt-get update && \
-    apt-get install -y kubectl
-    
-# Make port 8501 available to the world outside this container
+# kubectl 설치
+RUN apt-get update && apt-get install -y curl && \
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+    chmod +x ./kubectl && \
+    mv ./kubectl /usr/local/bin/kubectl
+
+# 컨테이너 외부로 노출할 포트 지정
 EXPOSE 8501
 
-# Run app.py when the container launches
+# 컨테이너 시작 시 실행될 명령어
 CMD ["streamlit", "run", "aks_manager.py", "--server.port=8501"]
